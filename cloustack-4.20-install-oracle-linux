@@ -1,0 +1,190 @@
+###All in one cloudstack poc install###
+
+#References:
+
+ - https://docs.cloudstack.apache.org/en/4.20.0.0/quickinstallationguide/qig.html
+ - https://technologyrss.com/how-to-install-apache-cloud-stack-v4-15-on-centos-7/
+
+#ISO Used: Oracle Linux 8
+
+x Oracle Linux 8 - https://yum.oracle.com/oracle-linux-isos.html
+Rocky Linux 8 - https://rockylinux.org/download
+AlmaLinux OS 8 - https://almalinux.org/get-almalinux/
+
+#This poc was installed on a physical computer running Oracle Linux directly, 
+without a VM, the network used was a home network where the physical interface goes directly to the internet provider router.
+
+#Initial Config
+
+dnf upgrade -y
+sudo systemctl disable NetworkManager --now
+sudo dnf install network-scripts -y
+sudo systemctl enable network --now
+sudo systemctl disable firewalld --now
+sudo dnf install iptables iptables-services -y
+sudo systemctl enable iptables --now
+
+sudo nano /etc/sysconfig/iptables
+#add this content to file:
+
+# sample configuration for iptables service
+# you can edit this manually or use system-config-firewall
+# please do not ask us to add additional ports/services to this default configuration
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 8080 -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 8250 -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 8443 -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 9090 -j ACCEPT
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 22 -j ACCEPT
+#-A INPUT -j REJECT --reject-with icmp-host-prohibited
+#-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+COMMIT
+
+systemctl restart iptables
+
+setenforce 0
+nano /etc/selinux/config
+#set disabled on SELINUX.
+# This file controls the state of SELinux on the system.
+# SELINUX= can take one of these three values:
+#     enforcing - SELinux security policy is enforced.
+#     permissive - SELinux prints warnings instead of enforcing.
+#     disabled - No SELinux policy is loaded.
+SELINUX=disabled
+# SELINUXTYPE= can take one of these three values:
+#     targeted - Targeted processes are protected,
+#     minimum - Modification of targeted policy. Only selected processes are pr$
+#     mls - Multi Level Security protection.
+SELINUXTYPE=targeted
+
+
+#Network Config - adjust accordingly your network ip and interface name, use always cloudbr0 for the bridge interface for this poc.
+sudo nano /etc/sysconfig/network-scripts/ifcfg-cloudbr0
+
+DEVICE=cloudbr0
+TYPE=Bridge
+BOOTPROTO=static
+IPADDR=192.168.2.20
+PREFIX=24
+GATEWAY=192.168.2.1
+DNS1=8.8.8.8
+ONBOOT=yes
+DELAY=0
+STP=no
+NM_CONTROLLED=no
+
+sudo nano /etc/sysconfig/network-scripts/ifcfg-enp2s0
+DEVICE=eth0
+TYPE=Ethernet
+BOOTPROTO=none
+ONBOOT=yes
+NM_CONTROLLED=no
+BRIDGE=cloudbr0
+
+sudo hostnamectl set-hostname cloud.local --static
+sudo reboot
+
+reboot
+
+#Managment Install and Config server
+
+dnf -y install chrony
+systemctl enable chronyd --now
+
+sudo nano /etc/yum.repos.d/cloudstack.repo
+#add this content to file.
+
+[cloudstack]
+name=cloudstack
+baseurl=http://download.cloudstack.org/centos/$releasever/4.20/
+enabled=1
+gpgcheck=0
+
+
+dnf -y install nfs-utils
+sudo nano /etc/exports
+#add this lines to file
+/export/secondary *(rw,async,no_root_squash,no_subtree_check)
+/export/primary *(rw,async,no_root_squash,no_subtree_check)
+
+sudo mkdir -p /export/primary
+sudo mkdir /export/secondary
+
+sudo nano /etc/idmapd.conf
+#uncomment this line e and set your domain ( i am using local for this poc)
+Domain = local  
+
+systemctl enable rpcbind --now
+systemctl enable nfs-server --now
+sudo exportfs -r
+#test if the nfs share can be mount by server.
+sudo mount 192.168.2.20:/export/primary /mnt/nfs
+sudo umount 192.168.2.20:/export/primary
+sudo mount 192.168.2.20:/export/secondary /mnt/nfs
+sudo umount 192.168.2.20:/export/secondary
+
+sudo dnf -y install mysql-server
+
+sudo nano /etc/my.cnf.d/mysql-server.cnf
+#add this lines on file
+innodb_rollback_on_timeout=1
+innodb_lock_wait_timeout=600
+max_connections=350
+log-bin=mysql-bin
+binlog-format = 'ROW'
+
+systemctl enable mysqld --now
+
+dnf -y install cloudstack-management
+
+alternatives --config java
+#make sure that java 17 is selected.
+
+cloudstack-setup-databases cloud:password@localhost --deploy-as=root
+
+cloudstack-setup-management
+
+#download and install default systemvms of cloudstack.
+sudo /usr/share/cloudstack-common/scripts/storage/secondary/cloud-install-sys-tmplt -m /export/secondary -u http://download.cloudstack.org/systemvm/4.20/systemvmtemplate-4.20.0-x86_64-kvm.qcow2.bz2 -h kvm -F 
+
+#Agent Install and Config
+dnf -y install cloudstack-agent
+
+sudo nano /etc/libvirt/qemu.conf
+#uncomment this line
+vnc_listen=0.0.0.0
+
+sudo nano /etc/libvirt/libvirtd.conf
+#uncomment this lines and set this values
+listen_tls = 0
+listen_tcp = 1
+tcp_port = "16509"
+auth_tcp = "none"
+mdns_adv = 0
+
+sudo nano /etc/sysconfig/libvirtd
+#uncomment this line
+#LIBVIRTD_ARGS="--listen"
+
+sudo systemctl mask libvirtd.socket libvirtd-ro.socket libvirtd-admin.socket libvirtd-tls.socket libvirtd-tcp.socket
+
+sudo systemctl restart libvirtd
+
+#Check if kvm ins running ok
+#This is the right output
+sudo lsmod | grep kvm
+[root@cloud cassio]# lsmod | grep kvm
+kvm_intel             393216  0
+kvm                  1134592  1 kvm_intel
+irqbypass              16384  1 kvm
+
+#Acess on your browser, it may take a while for the web service to be accessible.
+http://your_ip:8080/client
+user: admin
+password:  password
