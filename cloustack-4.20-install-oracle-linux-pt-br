@@ -1,5 +1,7 @@
 Nesta POC foi instalado o serviço de gerenciamento e o agent na mesma máquina, o agent é instalado em cada host de virtualização em ambientes de produção. 
 
+Obs: Caso for instalar o cloudstack dentro de uma vm dentro do Hyper-v lembre de habilitar o Mac Spoofing na interface da vm!
+
 ISOS que podem ser utilizadas:
 
 x Oracle Linux 8 - https://yum.oracle.com/oracle-linux-isos.html
