@@ -1,5 +1,8 @@
 ###All in one cloudstack poc install###
 
+Note: If you want to install CloudStack inside a VM within Hyper-V, remember to activate Mac Spoofing in the VM interface!
+https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/user-guide/enable-nested-virtualization
+
 #References:
 
  - https://docs.cloudstack.apache.org/en/4.20.0.0/quickinstallationguide/qig.html
