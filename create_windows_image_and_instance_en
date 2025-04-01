@@ -1,0 +1,71 @@
+#Create custom image of Windows Server 2022 Standard
+#Sytem recomendation:
+- 4 Core
+- 8192 RAM
+
+ISOS Used:
+
+Windows Server 2022:
+https://software-static.download.prss.microsoft.com/dbazure/888969d5-f34g-4e03-ac9d-1f9786c66749/26100.1742.240906-0331.ge_release_svc_refresh_SERVER_EVAL_x64FRE_en-us.iso
+
+Virtio Drivers
+https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.266-1/virtio-win.iso
+
+#After install Windows and setup de administrator password:
+#Detach windows server iso
+#Atach virtio-win-0.1.266-1 iso e install drivers and virt guest tools.
+#Detach virtio-win-0.1.266-1 iso
+
+#Install Cloudinit Software:
+https://cloudbase.it/downloads/CloudbaseInitSetup_Stable_x64.msi
+
+#Install all updates on Windows and reboot before execute sysprep
+
+#Enable RDP on powershell.
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value "0" 
+Set-NetFirewallRule -Name "RemoteDesktop-In-TCP-WS" -Enabled True
+Get-NetFirewallRule | Where-Object Name -like 'RemoteDesktop*' | Set-NetFirewallRule -Enabled True 
+#Disable NLA on Server Manager
+
+#Change permission of execution of scripts ON POWERSHELL.
+Set-ExecutionPolicy Unrestricted
+
+#Execute sysprep with generalize option enable.
+
+#Create image
+
+#If get an error on sysprep stage, run this command and run syspre again:
+Get-AppxPackage *MicrosoftEdge* | Reset-AppxPackage
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
