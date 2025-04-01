@@ -20,7 +20,7 @@ https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/
 #Install Cloudinit Software:
 https://cloudbase.it/downloads/CloudbaseInitSetup_Stable_x64.msi
 
-#Install all updates on Windows and reboot before execute sysprep
+#Install all updates on Windows and reboot before run sysprep
 
 #Enable RDP on powershell.
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Terminal Server" -Name "fDenyTSConnections" -Value "0" 
@@ -31,7 +31,7 @@ Get-NetFirewallRule | Where-Object Name -like 'RemoteDesktop*' | Set-NetFirewall
 #Change permission of execution of scripts ON POWERSHELL.
 Set-ExecutionPolicy Unrestricted
 
-#Execute sysprep with generalize option enable.
+#run sysprep with generalize option enable.
 
 #Create image
 
