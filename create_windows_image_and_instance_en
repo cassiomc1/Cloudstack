@@ -1,7 +1,7 @@
 #Create custom image of Windows Server 2022 Standard
-#Sytem recomendation:
+#Minimum Sytem recomendation for a Windows instance:
 - 4 Core
-- 8192 RAM
+- 4096 RAM
 
 ISOS Used:
 
