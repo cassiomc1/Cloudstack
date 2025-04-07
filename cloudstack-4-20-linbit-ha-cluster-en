@@ -9,6 +9,7 @@ node01.corp.local: 10.10.10.20
 node02.corp.local: 10.10.10.21 
 node03.corp.local: 10.10.10.22 
 
+#3 Nodes minimum required.
 #Nodes config:
 Disk root: 250GB
 Disk cluster data: 50GB
