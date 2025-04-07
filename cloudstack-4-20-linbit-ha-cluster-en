@@ -14,7 +14,7 @@ node03.corp.local: 10.10.10.22
 #3 Nodes minimum required.
 #Nodes config:
 Disk root: 250GB
-Disk cluster data: 50GB
+Disk cluster data: 500GB
 RAM: 16GB Each
 
 #After install LINBIT HCI CLoudstack on all nodes, acess the ip of your first node:
