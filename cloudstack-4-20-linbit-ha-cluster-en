@@ -1,0 +1,41 @@
+#Overview
+https://linbit.com/linbit-cloudstack-hci-appliance/
+#Install on all nodes:
+#Download ISO LINBIT HCI Cloudstack
+https://linbit.com/linbit-cloudstack-hci-appliance/#download
+
+#Nodes Cluster
+node01.corp.local: 10.10.10.20 
+node02.corp.local: 10.10.10.21 
+node03.corp.local: 10.10.10.22 
+
+#Nodes config:
+Disk root: 250GB
+Disk cluster data: 50GB
+RAM: 16GB Each
+
+#After install LINBIT HCI CLoudstack on all nodes, acess the ip of your first node:
+https://ip_first_node
+
+Internal DNS:
+10.10.10.254
+
+#Managment Network:
+10.10.10.0/16
+
+#Guest VM Network:
+10.10.20.0/16
+
+#LINSTOR Controller high-availability IP
+10.10.10.100
+
+#Cloudstack Managment IP:
+10.10.10.150
+
+#NFS Export IP:
+10.10.10.160
+
+#Add on all nodes on file: /etc/cloudstack/agent/agent.properties and restart managment service:
+guest.cpu.mode=host-model
+
+systemctl restart cloudstack-agent
